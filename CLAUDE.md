@@ -1,5 +1,8 @@
 # Правила проекта
 
+> **Общие правила кодирования**: См. глобальный `~/.claude/CLAUDE.md`
+> (kebab-case, стрелочные функции, именованные экспорты, запрет на any/as, и т.д.)
+
 ## Архитектура: Feature-Sliced Design (FSD)
 
 **КРИТИЧЕСКИ ВАЖНО**: Этот проект СТРОГО следует методологии Feature-Sliced Design (FSD).
@@ -118,65 +121,7 @@ import { LoginForm } from 'features/auth';
 - Глобальные стили
 - Точка входа
 
-## Правила именования и кодирования
-
-Все правила из глобального CLAUDE.md остаются в силе:
-
-1. **kebab-case** для всех файлов и папок
-2. **Стрелочные функции** везде
-3. **Именованные экспорты** (без default)
-4. **Запрет на `any`** - используй `unknown`, `never` или конкретные типы
-5. **Запрет на `as`** (type assertions) - используй type guards и правильную типизацию
-6. **Фигурные скобки** обязательны в условиях
-
-## Дополнительные правила FSD
-
-### 1. Именование слайсов в pages
-
-**Правило**: Используй **краткие названия** для папок слайсов в слое `pages`.
-
-```typescript
-// ✅ ПРАВИЛЬНО
-pages/main/
-pages/profile/
-pages/settings/
-
-// ❌ НЕПРАВИЛЬНО
-pages/main-page/
-pages/profile-page/
-pages/settings-page/
-```
-
-**Причина**: Уже понятно из контекста, что мы находимся в слое pages.
-
-**НО**: Компоненты страниц именуй **полностью**:
-
-```typescript
-// pages/main/ui/index.tsx
-export const MainPage = () => {}; // ✅ ПРАВИЛЬНО
-
-export const Main = () => {}; // ❌ НЕПРАВИЛЬНО
-```
-
-### 2. Импорты без /index
-
-**Правило**: НИКОГДА не пиши `/index` в конце пути импорта.
-
-```typescript
-// ✅ ПРАВИЛЬНО
-export { MainPage } from './ui';
-import { useAuth } from '@/features/auth';
-import { UserCard } from '@/entities/user';
-
-// ❌ НЕПРАВИЛЬНО
-export { MainPage } from './ui/index';
-import { useAuth } from '@/features/auth/index';
-import { UserCard } from '@/entities/user/index';
-```
-
-**Причина**: Редактор (TypeScript/Node.js) автоматически подставляет `index` файл из каталога.
-
-## Примеры правильной FSD структуры
+## Примеры FSD структуры
 
 ### Пример 1: Feature "Авторизация"
 
