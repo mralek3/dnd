@@ -97,5 +97,12 @@ const mockData: DataNode[] = [
 ];
 
 export const DataTreeTable = () => {
-    return <TreeTable columns={columns} dataSource={mockData} pagination={false} />;
+    return (
+        <TreeTable
+            columns={columns}
+            dataSource={mockData}
+            pagination={false}
+            draggable={true}
+        />
+    );
 };
