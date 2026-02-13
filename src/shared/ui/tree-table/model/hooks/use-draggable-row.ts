@@ -26,7 +26,10 @@ export const useDraggableRow = ({
 
     useEffect(() => {
         const element = dragHandleRef.current;
-        if (!enabled || !element) return;
+
+        if (!enabled || !element) {
+            return;
+        }
 
         return draggable({
             element,

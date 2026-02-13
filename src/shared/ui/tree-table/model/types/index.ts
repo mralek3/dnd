@@ -41,7 +41,7 @@ export interface TreeNodeMeta {
     key: string;
     level: number;
     parentKey: string | null;
-    /** Ключи прямых дочерних элементов (видимых, т.е. когда узел раскрыт) */
+    /** Ключи прямых дочерних элементов (заполняются для всех узлов, независимо от состояния раскрытия) */
     childKeys: string[];
     hasChildren: boolean;
     isExpanded: boolean;

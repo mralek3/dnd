@@ -12,14 +12,17 @@ import type { TreeNodeMeta, VisualIndicator, IndicatorType, ReorderEvent } from 
 // Минимальный store для индикатора. useSyncExternalStore обеспечивает
 // ре-рендер только тех строк, чьё состояние индикатора изменилось.
 
-function createIndicatorStore() {
+const createIndicatorStore = () => {
     let current: VisualIndicator | null = null;
     const listeners = new Set<() => void>();
 
     return {
         get: () => current,
         set: (next: VisualIndicator | null) => {
-            if (current?.rowKey === next?.rowKey && current?.type === next?.type) return;
+            if (current?.rowKey === next?.rowKey && current?.type === next?.type) {
+                return;
+            }
+
             current = next;
             listeners.forEach(l => l());
         },
@@ -30,7 +33,7 @@ function createIndicatorStore() {
             };
         }
     };
-}
+};
 
 export type IndicatorStore = ReturnType<typeof createIndicatorStore>;
 
@@ -50,17 +53,21 @@ const TreeDndContext = createContext<TreeDndContextValue | null>(null);
 // ─── Hooks ───────────────────────────────────────────────────────────
 
 /** Получить значения контекста (бросает ошибку вне провайдера) */
-export function useTreeDnd() {
+export const useTreeDnd = () => {
     const ctx = useContext(TreeDndContext);
-    if (!ctx) throw new Error('useTreeDnd must be used inside TreeDndProvider');
+
+    if (!ctx) {
+        throw new Error('useTreeDnd must be used inside TreeDndProvider');
+    }
+
     return ctx;
-}
+};
 
 /**
  * Возвращает тип индикатора для конкретной строки.
  * Строка ре-рендерится ТОЛЬКО когда её индикатор меняется (null ↔ type).
  */
-export function useIndicatorForRow(rowKey: string): IndicatorType | null {
+export const useIndicatorForRow = (rowKey: string): IndicatorType | null => {
     const { indicatorStore } = useTreeDnd();
 
     const getSnapshot = useCallback(() => {
@@ -69,7 +76,7 @@ export function useIndicatorForRow(rowKey: string): IndicatorType | null {
     }, [indicatorStore, rowKey]);
 
     return useSyncExternalStore(indicatorStore.subscribe, getSnapshot);
-}
+};
 
 // ─── Provider ────────────────────────────────────────────────────────
 
@@ -79,9 +86,10 @@ interface TreeDndProviderProps {
     children: React.ReactNode;
 }
 
-export function TreeDndProvider({ nodeMap, onReorder, children }: TreeDndProviderProps) {
+export const TreeDndProvider = ({ nodeMap, onReorder, children }: TreeDndProviderProps) => {
     // Store создаётся один раз и не пересоздаётся
     const storeRef = useRef<IndicatorStore | null>(null);
+
     if (!storeRef.current) {
         storeRef.current = createIndicatorStore();
     }
@@ -96,4 +104,4 @@ export function TreeDndProvider({ nodeMap, onReorder, children }: TreeDndProvide
     );
 
     return <TreeDndContext.Provider value={value}>{children}</TreeDndContext.Provider>;
-}
+};

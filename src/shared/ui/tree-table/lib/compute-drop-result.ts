@@ -19,48 +19,63 @@ export interface DropResult {
  * Находит последний видимый потомок узла (рекурсивно по раскрытым потомкам).
  * Нужен для правила 5: индикатор «под развёрнутым» ставится после его последнего потомка.
  */
-function getLastVisibleDescendant(key: string, nodeMap: Map<string, TreeNodeMeta>): string {
+const getLastVisibleDescendant = (key: string, nodeMap: Map<string, TreeNodeMeta>): string => {
     const node = nodeMap.get(key);
+
     if (!node || !node.isExpanded || node.childKeys.length === 0) {
         return key;
     }
+
     const lastChildKey = node.childKeys[node.childKeys.length - 1];
     return getLastVisibleDescendant(lastChildKey, nodeMap);
-}
+};
 
 /**
  * Проверяет, является ли `ancestorKey` предком `descendantKey` в дереве.
  */
-function isAncestor(
+const isAncestor = (
     ancestorKey: string,
     descendantKey: string,
     nodeMap: Map<string, TreeNodeMeta>
-): boolean {
+): boolean => {
     let current = nodeMap.get(descendantKey);
+
     while (current?.parentKey != null) {
-        if (current.parentKey === ancestorKey) return true;
+        if (current.parentKey === ancestorKey) {
+            return true;
+        }
+
         current = nodeMap.get(current.parentKey);
     }
+
     return false;
-}
+};
 
 /**
  * Находит предка `key` на заданном уровне вложенности.
  * Нужен для обработки drop на вложенный потомок: перенаправляем на «below ancestor».
  */
-function findAncestorAtLevel(
+const findAncestorAtLevel = (
     key: string,
     targetLevel: number,
     nodeMap: Map<string, TreeNodeMeta>
-): string | null {
+): string | null => {
     let current = nodeMap.get(key);
+
     while (current) {
-        if (current.level === targetLevel) return current.key;
-        if (current.parentKey == null) break;
+        if (current.level === targetLevel) {
+            return current.key;
+        }
+
+        if (current.parentKey == null) {
+            break;
+        }
+
         current = nodeMap.get(current.parentKey);
     }
+
     return null;
-}
+};
 
 /**
  * Основная функция: вычисляет результат drop-операции с учётом всех правил.
@@ -72,30 +87,42 @@ function findAncestorAtLevel(
  * 4. Если перемещение ничего не меняет — не подсвечивать и не вызывать коллбек.
  * 5. «Под развёрнутый sibling» — индикатор под последним видимым потомком,
  *    логика остаётся «под sibling».
+ * 6. Drop на вложенный потомок элемента того же уровня перенаправляется на «below ancestor».
  */
-export function computeDropResult(
+export const computeDropResult = (
     sourceKey: string,
     targetKey: string,
     rawInstruction: RawInstruction,
     nodeMap: Map<string, TreeNodeMeta>
-): DropResult {
+): DropResult => {
     const BLOCKED: DropResult = { indicator: null, event: null };
 
     const source = nodeMap.get(sourceKey);
     const target = nodeMap.get(targetKey);
-    if (!source || !target) return BLOCKED;
+
+    if (!source || !target) {
+        return BLOCKED;
+    }
 
     // ── Правило 2: нельзя перемещать элемент в/над/под себя ──
-    if (sourceKey === targetKey) return BLOCKED;
+    if (sourceKey === targetKey) {
+        return BLOCKED;
+    }
 
     // Нельзя перемещать элемент в собственного потомка
-    if (isAncestor(sourceKey, targetKey, nodeMap)) return BLOCKED;
+    if (isAncestor(sourceKey, targetKey, nodeMap)) {
+        return BLOCKED;
+    }
 
     // ── Правило 6: drop на вложенный потомок элемента того же уровня ──
     // Перенаправляем на «below ancestor» (предок на уровне source)
     if (rawInstruction === 'below-ancestor') {
         const ancestorKey = findAncestorAtLevel(targetKey, source.level, nodeMap);
-        if (!ancestorKey) return BLOCKED;
+
+        if (!ancestorKey) {
+            return BLOCKED;
+        }
+
         // Рекурсивно вызываем с «below» на найденного предка — все правила
         // (no-op, правило 5 для развёрнутых) применятся автоматически.
         return computeDropResult(sourceKey, ancestorKey, 'below', nodeMap);
@@ -104,10 +131,14 @@ export function computeDropResult(
     // ── Правило 1: проверяем допустимость по уровням ──
     if (rawInstruction === 'above' || rawInstruction === 'below') {
         // above/below — только на элементы того же уровня
-        if (target.level !== source.level) return BLOCKED;
+        if (target.level !== source.level) {
+            return BLOCKED;
+        }
     } else if (rawInstruction === 'make-child') {
         // make-child — только на элементы уровнем выше (будущий родитель)
-        if (target.level !== source.level - 1) return BLOCKED;
+        if (target.level !== source.level - 1) {
+            return BLOCKED;
+        }
     }
 
     // ── Обработка make-child ──
@@ -117,10 +148,13 @@ export function computeDropResult(
             const firstChildKey = target.childKeys[0];
 
             // Если первый дочерний — это сам source → no-op (правило 4)
-            if (firstChildKey === sourceKey) return BLOCKED;
+            if (firstChildKey === sourceKey) {
+                return BLOCKED;
+            }
 
             // Проверяем no-op: source уже стоит прямо перед firstChild?
             const firstChild = nodeMap.get(firstChildKey);
+
             if (firstChild && source.parentKey === target.key && source.indexAmongSiblings === 0) {
                 return BLOCKED; // source уже первый ребёнок этого родителя
             }
@@ -135,7 +169,10 @@ export function computeDropResult(
         // Правило 4: если source уже последний ребёнок target → no-op
         if (source.parentKey === targetKey) {
             const lastIdx = target.childKeys.length - 1;
-            if (target.childKeys[lastIdx] === sourceKey) return BLOCKED;
+
+            if (target.childKeys[lastIdx] === sourceKey) {
+                return BLOCKED;
+            }
         }
 
         return {
@@ -187,4 +224,4 @@ export function computeDropResult(
     }
 
     return BLOCKED;
-}
+};

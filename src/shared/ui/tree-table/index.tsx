@@ -7,28 +7,28 @@ import { useDragHandleRef } from './model/drag-handle-context';
 import { TreeDndProvider } from './model/tree-dnd-context';
 import type { TreeNodeMeta, ReorderEvent } from './model/types';
 
-// ─── DragHandleCell ───────────────────────────────────────────────────
+// ─── DragHandleCell ──────────────────────────────────────────────────
 
 const DragHandleCell = () => {
     const dragHandleRef = useDragHandleRef();
     return <DragHandle innerRef={dragHandleRef} />;
 };
 
-// ─── Построение карты метаданных дерева ───────────────────────────────
+// ─── Построение карты метаданных дерева ──────────────────────────────
 
 /**
  * Рекурсивно строит полную карту { rowKey → TreeNodeMeta } по дереву данных.
  * Обходит все узлы (включая collapsed), чтобы computeDropResult имел
  * полную информацию о структуре дерева.
  */
-function buildNodeMap<T extends Record<string, unknown>>(
+const buildNodeMap = <T extends Record<string, unknown>>(
     data: readonly T[],
     level: number,
     parentKey: string | null,
     map: Map<string, TreeNodeMeta>,
     expandedKeys: Set<string>,
     childrenColumnName: string
-): void {
+): void => {
     const siblingKeys = data.map(item => {
         return hasKeyProperty(item) ? String(item.key) : '';
     });
@@ -65,9 +65,9 @@ function buildNodeMap<T extends Record<string, unknown>>(
             buildNodeMap(children, level + 1, key, map, expandedKeys, childrenColumnName);
         }
     });
-}
+};
 
-// ─── TreeTable ────────────────────────────────────────────────────────
+// ─── TreeTable ───────────────────────────────────────────────────────
 
 interface TreeTableProps<T> extends Omit<TableProps<T>, 'columns'> {
     columns: TableColumnsType<T>;
@@ -105,7 +105,7 @@ export const TreeTable = <T extends Record<string, unknown>>({
     const childrenColumnName =
         typeof childrenColumnNameValue === 'string' ? childrenColumnNameValue : 'children';
 
-    // ─── Отслеживание раскрытых строк ───────────────────
+    // ─── Отслеживание раскрытых строк ────────────────────────────────────
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
     const handleExpand = useCallback(
@@ -137,18 +137,23 @@ export const TreeTable = <T extends Record<string, unknown>>({
         }
     }, [expandable]);
 
-    // ─── Полная карта метаданных узлов ───────────────────
+    // ─── Полная карта метаданных узлов ───────────────────────────────────
     const nodeMap = useMemo(() => {
         const map = new Map<string, TreeNodeMeta>();
+
         if (dataSource) {
             buildNodeMap(dataSource, 0, null, map, expandedKeys, childrenColumnName);
         }
+
         return map;
     }, [dataSource, expandedKeys, childrenColumnName]);
 
-    // ─── Columns ─────────────────────────────────────────
+    // ─── Columns ─────────────────────────────────────────────────────────
     const allColumns = useMemo(() => {
-        if (!draggable) return columns;
+        if (!draggable) {
+            return columns;
+        }
+
         const dragColumn = {
             key: '__drag__',
             title: '',
@@ -158,7 +163,7 @@ export const TreeTable = <T extends Record<string, unknown>>({
         return [dragColumn, ...columns];
     }, [columns, draggable]);
 
-    // ─── Expandable config ───────────────────────────────
+    // ─── Expandable config ───────────────────────────────────────────────
     const expandableConfig = useMemo(() => {
         const base = draggable
             ? { childrenColumnName, ...expandable, expandIconColumnIndex: 1 }
@@ -166,9 +171,11 @@ export const TreeTable = <T extends Record<string, unknown>>({
         return { ...base, onExpand: handleExpand };
     }, [draggable, expandable, handleExpand, childrenColumnName]);
 
-    // ─── Custom row component ────────────────────────────
+    // ─── Custom row component ────────────────────────────────────────────
     const components = useMemo(() => {
-        if (!draggable) return undefined;
+        if (!draggable) {
+            return undefined;
+        }
 
         return {
             body: {
@@ -190,7 +197,7 @@ export const TreeTable = <T extends Record<string, unknown>>({
         };
     }, [draggable, nodeMap]);
 
-    // ─── Render ──────────────────────────────────────────
+    // ─── Render ──────────────────────────────────────────────────────────
     const table = (
         <Table
             {...restProps}
@@ -201,7 +208,9 @@ export const TreeTable = <T extends Record<string, unknown>>({
         />
     );
 
-    if (!draggable) return table;
+    if (!draggable) {
+        return table;
+    }
 
     return (
         <TreeDndProvider nodeMap={nodeMap} onReorder={onReorder}>
