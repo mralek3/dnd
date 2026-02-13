@@ -112,7 +112,7 @@ export const DataTreeTable = () => {
                 key: event.targetKey,
                 index: event.targetIndex
             },
-            position: event.position
+            instruction: event.instruction
         });
 
         // Здесь будет логика для фактического изменения порядка данных

@@ -2,13 +2,19 @@
  * Типы для drag-and-drop функциональности в древовидной таблице
  */
 
+import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+
 /**
- * Позиция относительно целевой строки при перетаскивании
- * - 'top' - над строкой (вставка выше)
- * - 'bottom' - под строкой (вставка ниже)
- * - null - на самой строке (без точной позиции)
+ * Реэкспорт типа Instruction для использования снаружи.
+ *
+ * Instruction — это результат работы tree-item hitbox:
+ * - 'reorder-above'  — вставка над строкой
+ * - 'reorder-below'  — вставка под строкой
+ * - 'make-child'     — перетаскивание В строку (сделать дочерним)
+ * - 'reparent'       — переместить на другой уровень
+ * - 'instruction-blocked' — действие заблокировано
  */
-export type DropPosition = 'top' | 'bottom' | null;
+export type { Instruction };
 
 /**
  * Информация о перетаскиваемой строке (источник)
@@ -28,8 +34,8 @@ export interface DropTargetData {
 }
 
 /**
- * Событие завершения перетаскивания
- * Содержит всю информацию для обработки изменения порядка строк
+ * Событие завершения перетаскивания.
+ * Содержит всю информацию для обработки изменения порядка строк.
  */
 export interface ReorderEvent {
     /** ID перетаскиваемой строки */
@@ -40,6 +46,6 @@ export interface ReorderEvent {
     targetKey: string;
     /** Индекс цели в массиве данных */
     targetIndex: number;
-    /** Позиция относительно целевой строки */
-    position: DropPosition;
+    /** Инструкция от tree-item hitbox (позиция + уровень) */
+    instruction: Instruction | null;
 }

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { HTMLAttributes } from 'react';
+import type { ItemMode } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { useDraggableRow } from '../lib/use-draggable-row';
 import { useDropTargetRow } from '../lib/use-drop-target-row';
 import { DragHandleContext } from '../lib/drag-handle-context';
@@ -14,6 +15,10 @@ interface DraggableRowProps extends HTMLAttributes<HTMLTableRowElement> {
     'data-row-key': string;
     /** Индекс строки в массиве */
     index: number;
+    /** Уровень вложенности строки (0 — корень) */
+    level: number;
+    /** Режим элемента дерева (standard / expanded / last-in-group) */
+    mode: ItemMode;
     /** Включено ли перетаскивание */
     draggable: boolean;
     /** Коллбек при завершении перетаскивания */
@@ -29,6 +34,8 @@ interface DraggableRowProps extends HTMLAttributes<HTMLTableRowElement> {
 export const DraggableRow = ({
     'data-row-key': rowKey,
     index,
+    level,
+    mode,
     draggable: isDraggable,
     onReorder,
     children,
@@ -43,9 +50,11 @@ export const DraggableRow = ({
     });
 
     // Hook для drop target (вся строка)
-    const { rowRef, closestEdge } = useDropTargetRow({
+    const { rowRef, instruction } = useDropTargetRow({
         rowKey,
         rowIndex: index,
+        level,
+        mode,
         enabled: isDraggable,
         onReorder
     });
@@ -57,8 +66,8 @@ export const DraggableRow = ({
         [dragHandleRef]
     );
 
-    // Стили индикатора через box-shadow (надёжно работает на <tr>)
-    const indicatorStyle = getDropIndicatorStyle(closestEdge);
+    // Стили индикатора через box-shadow / outline (надёжно работает на <tr>)
+    const indicatorStyle = getDropIndicatorStyle(instruction);
 
     return (
         <DragHandleContext.Provider value={contextValue}>
