@@ -77,11 +77,17 @@ export const buildTreeFromFlat = <T extends FlatNode>(
         } else {
             // Находим родителя и добавляем текущий узел в его children
             const parent = nodeMap.get(parentId);
+
             if (parent) {
-                if (!parent[childrenKey]) {
-                    parent[childrenKey] = [];
+                // Безопасное приведение для доступа к динамическому ключу
+                const parentRecord = parent as Record<string, unknown>;
+
+                if (!parentRecord[childrenKey]) {
+                    parentRecord[childrenKey] = [];
                 }
-                const children = parent[childrenKey];
+
+                const children = parentRecord[childrenKey];
+
                 if (Array.isArray(children)) {
                     children.push(node);
                 }
