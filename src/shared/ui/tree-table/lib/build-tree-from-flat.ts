@@ -65,7 +65,11 @@ export const buildTreeFromFlat = <T extends FlatNode>(
 
         const parentIdValue = item[parentIdKey];
         const parentId =
-            typeof parentIdValue === 'string' ? parentIdValue : parentIdValue === null ? null : undefined;
+            typeof parentIdValue === 'string'
+                ? parentIdValue
+                : parentIdValue === null
+                  ? null
+                  : undefined;
 
         // Если parentId не указан или равен rootParentId - это корневой элемент
         if (parentId === rootParentId || parentId === undefined || parentId === null) {
