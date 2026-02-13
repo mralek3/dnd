@@ -2,19 +2,27 @@ import { useMemo } from 'react';
 import { Table } from 'antd';
 import type { TableProps, TableColumnsType } from 'antd';
 import { DragHandle } from '../drag-handle';
+import { DraggableRow } from './ui/draggable-row';
+import { useDragHandleRef } from './lib/drag-handle-context';
+import type { ReorderEvent } from './lib/types';
 
 interface TreeTableProps<T> extends Omit<TableProps<T>, 'columns'> {
     columns: TableColumnsType<T>;
     draggable?: boolean;
-    onReorder?: (newData: T[]) => void;
+    onReorder?: (event: ReorderEvent) => void;
 }
 
+/**
+ * Компонент древовидной таблицы с поддержкой drag-and-drop
+ */
 export const TreeTable = <T extends object>({
     columns,
     draggable = false,
     expandable,
+    onReorder,
     ...restProps
 }: TreeTableProps<T>) => {
+    // Добавляем столбец с drag handle если включен режим перетаскивания
     const allColumns = useMemo(() => {
         if (!draggable) return columns;
 
@@ -22,13 +30,19 @@ export const TreeTable = <T extends object>({
             key: '__drag__',
             title: '',
             width: 40,
-            render: () => <DragHandle />
+            render: () => {
+                // Получаем ref из контекста (передается от DraggableRow)
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                const dragHandleRef = useDragHandleRef();
+                return <DragHandle innerRef={dragHandleRef} />;
+            }
         };
 
         // Добавляем drag столбец первым
         return [dragColumn, ...columns];
     }, [columns, draggable]);
 
+    // Настройка expandable для корректного отображения expand иконки
     const expandableConfig = useMemo(() => {
         if (!draggable) return expandable;
 
@@ -41,5 +55,29 @@ export const TreeTable = <T extends object>({
         };
     }, [draggable, expandable]);
 
-    return <Table {...restProps} columns={allColumns} expandable={expandableConfig} />;
+    // Кастомный компонент строки с поддержкой drag-and-drop
+    const components = useMemo(() => {
+        if (!draggable) return undefined;
+
+        return {
+            body: {
+                row: (props: any) => (
+                    <DraggableRow
+                        {...props}
+                        draggable={draggable}
+                        onReorder={onReorder}
+                    />
+                )
+            }
+        };
+    }, [draggable, onReorder]);
+
+    return (
+        <Table
+            {...restProps}
+            columns={allColumns}
+            expandable={expandableConfig}
+            components={components}
+        />
+    );
 };

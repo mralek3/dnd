@@ -61,7 +61,15 @@
     json2mq "^0.2.0"
     throttle-debounce "^5.0.0"
 
-"@atlaskit/pragmatic-drag-and-drop@^1.7.7":
+"@atlaskit/pragmatic-drag-and-drop-hitbox@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/pragmatic-drag-and-drop-hitbox/-/pragmatic-drag-and-drop-hitbox-1.1.0.tgz#3a031ac295513a394eff116f9b75869e64d3e559"
+  integrity sha512-JWt6eVp6Br2FPHRM8s0dUIHQk/jFInGP1f3ti5CdtM1Ji5/pt8Akm44wDC063Gv2i5RGseixtbW0z/t6RYtbdg==
+  dependencies:
+    "@atlaskit/pragmatic-drag-and-drop" "^1.6.0"
+    "@babel/runtime" "^7.0.0"
+
+"@atlaskit/pragmatic-drag-and-drop@^1.6.0", "@atlaskit/pragmatic-drag-and-drop@^1.7.7":
   version "1.7.7"
   resolved "https://registry.yarnpkg.com/@atlaskit/pragmatic-drag-and-drop/-/pragmatic-drag-and-drop-1.7.7.tgz#2e491de6a6fad6c79545ca8d5e7fc23cc7a2e017"
   integrity sha512-jX+68AoSTqO/fhCyJDTZ38Ey6/wyL2Iq+J/moanma0YyktpnoHxevjY1UNJHYp0NCburdQDZSL1ZFac1mO1osQ==

@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
+        "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "antd": "^6.3.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0"

@@ -1,4 +1,5 @@
 import { TreeTable } from '@/shared/ui';
+import type { ReorderEvent } from '@/shared/ui';
 import type { TableColumnsType } from 'antd';
 
 interface DataNode {
@@ -97,12 +98,34 @@ const mockData: DataNode[] = [
 ];
 
 export const DataTreeTable = () => {
+    /**
+     * Обработчик завершения перетаскивания строки
+     * Выводит информацию о перетаскивании в консоль
+     */
+    const handleReorder = (event: ReorderEvent) => {
+        console.log('Reorder event:', {
+            source: {
+                key: event.sourceKey,
+                index: event.sourceIndex
+            },
+            target: {
+                key: event.targetKey,
+                index: event.targetIndex
+            },
+            position: event.position
+        });
+
+        // Здесь будет логика для фактического изменения порядка данных
+        // Например, вызов API или обновление состояния
+    };
+
     return (
         <TreeTable
             columns={columns}
             dataSource={mockData}
             pagination={false}
             draggable={true}
+            onReorder={handleReorder}
         />
     );
 };
