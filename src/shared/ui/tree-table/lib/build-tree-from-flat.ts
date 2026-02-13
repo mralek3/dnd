@@ -93,7 +93,6 @@ export const buildTreeFromFlat = <T extends FlatNode>(
                 }
             } else {
                 // Если родитель не найден, считаем элемент корневым
-                console.warn(`Parent with key "${parentId}" not found for item "${item.key}"`);
                 rootNodes.push(node);
             }
         }
