@@ -52,7 +52,9 @@ export const useDropTargetRow = ({ rowKey, rowIndex, level, enabled }: UseDropTa
                 return false;
             }
 
-            const record = data as Record<string, unknown>;
+            // После проверки выше, data является объектом
+            // Безопасное приведение для доступа к свойствам
+            const record: Record<string, unknown> = data;
             return (
                 typeof record.rowKey === 'string' &&
                 typeof record.rowIndex === 'number' &&

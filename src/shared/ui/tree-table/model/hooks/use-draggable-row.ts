@@ -30,14 +30,15 @@ export const useDraggableRow = ({
 
         return draggable({
             element,
-            getInitialData: () =>
-                ({
+            getInitialData: (): Record<string, unknown> => {
+                return {
                     type: 'tree-row',
                     rowKey,
                     rowIndex,
                     level,
                     parentKey
-                }) as unknown as Record<string, unknown>
+                };
+            }
         });
     }, [rowKey, rowIndex, level, parentKey, enabled]);
 

@@ -63,7 +63,9 @@ export const buildTreeFromFlat = <T extends FlatNode>(
             return;
         }
 
-        const parentId = item[parentIdKey] as string | null | undefined;
+        const parentIdValue = item[parentIdKey];
+        const parentId =
+            typeof parentIdValue === 'string' ? parentIdValue : parentIdValue === null ? null : undefined;
 
         // Если parentId не указан или равен rootParentId - это корневой элемент
         if (parentId === rootParentId || parentId === undefined || parentId === null) {
@@ -75,7 +77,10 @@ export const buildTreeFromFlat = <T extends FlatNode>(
                 if (!parent[childrenKey]) {
                     parent[childrenKey] = [];
                 }
-                (parent[childrenKey] as TreeNodeWithChildren[]).push(node);
+                const children = parent[childrenKey];
+                if (Array.isArray(children)) {
+                    children.push(node);
+                }
             } else {
                 // Если родитель не найден, считаем элемент корневым
                 console.warn(`Parent with key "${parentId}" not found for item "${item.key}"`);

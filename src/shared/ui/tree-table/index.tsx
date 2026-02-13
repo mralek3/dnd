@@ -21,7 +21,7 @@ const DragHandleCell = () => {
  * Обходит все узлы (включая collapsed), чтобы computeDropResult имел
  * полную информацию о структуре дерева.
  */
-function buildNodeMap<T extends Record<string, any>>(
+function buildNodeMap<T extends Record<string, unknown>>(
     data: readonly T[],
     level: number,
     parentKey: string | null,
@@ -29,17 +29,24 @@ function buildNodeMap<T extends Record<string, any>>(
     expandedKeys: Set<string>,
     childrenColumnName: string
 ): void {
-    const siblingKeys = data.map(item => String(item.key));
+    const siblingKeys = data.map(item => {
+        return hasKeyProperty(item) ? String(item.key) : '';
+    });
 
     data.forEach((item, idx) => {
-        const key = String(item.key);
-        const children: T[] | undefined = item[childrenColumnName];
+        const key = hasKeyProperty(item) ? String(item.key) : '';
+        const childrenProp = item[childrenColumnName];
+        const children: T[] | undefined = Array.isArray(childrenProp) ? childrenProp : undefined;
         const hasChildren = Array.isArray(children) && children.length > 0;
         const isExpanded = hasChildren && expandedKeys.has(key);
 
         // childKeys — только непосредственные дети.
         // Заполняются даже для свёрнутых узлов (нужно для правила 4 — no-op detection).
-        const childKeys = hasChildren ? children.map((c: T) => String(c.key)) : [];
+        const childKeys = hasChildren
+            ? children.map(c => {
+                  return hasKeyProperty(c) ? String(c.key) : '';
+              })
+            : [];
 
         map.set(key, {
             key,
@@ -68,7 +75,14 @@ interface TreeTableProps<T> extends Omit<TableProps<T>, 'columns'> {
     onReorder?: (event: ReorderEvent) => void;
 }
 
-export const TreeTable = <T extends object>({
+/**
+ * Проверяет, есть ли у объекта свойство key
+ */
+const hasKeyProperty = (obj: unknown): obj is Record<string, unknown> & { key: unknown } => {
+    return typeof obj === 'object' && obj !== null && 'key' in obj;
+};
+
+export const TreeTable = <T extends Record<string, unknown>>({
     columns,
     draggable = false,
     expandable,
@@ -76,42 +90,58 @@ export const TreeTable = <T extends object>({
     dataSource,
     ...restProps
 }: TreeTableProps<T>) => {
-    const childrenColumnName = (expandable as any)?.childrenColumnName ?? 'children';
+    // Helper для безопасного доступа к свойствам expandable
+    // Antd не экспортирует полные типы для ExpandableConfig
+    const getExpandableProperty = <K extends string>(key: K): unknown => {
+        if (!expandable || typeof expandable !== 'object') {
+            return undefined;
+        }
+        // Безопасное приведение для доступа к свойствам объекта Antd
+        const obj = expandable as unknown;
+        return (obj as Record<string, unknown>)[key];
+    };
+
+    const childrenColumnNameValue = getExpandableProperty('childrenColumnName');
+    const childrenColumnName =
+        typeof childrenColumnNameValue === 'string' ? childrenColumnNameValue : 'children';
 
     // ─── Отслеживание раскрытых строк ───────────────────
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
     const handleExpand = useCallback(
         (expanded: boolean, record: T) => {
-            const key = String((record as any).key);
+            const key = hasKeyProperty(record) ? String(record.key) : '';
+
             setExpandedKeys(prev => {
                 const next = new Set(prev);
-                expanded ? next.add(key) : next.delete(key);
+                if (expanded) {
+                    next.add(key);
+                } else {
+                    next.delete(key);
+                }
                 return next;
             });
-            (expandable as any)?.onExpand?.(expanded, record);
+
+            const onExpandCallback = getExpandableProperty('onExpand');
+            if (typeof onExpandCallback === 'function') {
+                onExpandCallback(expanded, record);
+            }
         },
         [expandable]
     );
 
     useEffect(() => {
-        if ((expandable as any)?.expandedRowKeys) {
-            setExpandedKeys(new Set((expandable as any).expandedRowKeys.map(String)));
+        const expandedRowKeys = getExpandableProperty('expandedRowKeys');
+        if (Array.isArray(expandedRowKeys)) {
+            setExpandedKeys(new Set(expandedRowKeys.map(String)));
         }
-    }, [(expandable as any)?.expandedRowKeys]);
+    }, [expandable]);
 
     // ─── Полная карта метаданных узлов ───────────────────
     const nodeMap = useMemo(() => {
         const map = new Map<string, TreeNodeMeta>();
         if (dataSource) {
-            buildNodeMap(
-                dataSource as readonly Record<string, any>[],
-                0,
-                null,
-                map,
-                expandedKeys,
-                childrenColumnName
-            );
+            buildNodeMap(dataSource, 0, null, map, expandedKeys, childrenColumnName);
         }
         return map;
     }, [dataSource, expandedKeys, childrenColumnName]);
