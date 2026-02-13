@@ -19,7 +19,7 @@ interface DragHandleProps {
 export const DragHandle = ({ className, style, innerRef }: DragHandleProps) => {
     return (
         <Button
-            ref={innerRef as any}
+            ref={innerRef}
             type='text'
             icon={<HolderOutlined />}
             className={className}

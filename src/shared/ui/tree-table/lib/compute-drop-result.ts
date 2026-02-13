@@ -1,4 +1,4 @@
-import type { TreeNodeMeta, VisualIndicator, ReorderEvent } from './types';
+import type { TreeNodeMeta, VisualIndicator, ReorderEvent } from '../model/types';
 
 /**
  * Тип raw-инструкции из hitbox (closest-edge или make-child)

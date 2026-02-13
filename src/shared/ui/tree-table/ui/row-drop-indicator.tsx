@@ -1,4 +1,4 @@
-import type { IndicatorType } from '../lib/types';
+import type { IndicatorType } from '../model/types';
 
 /**
  * Возвращает inline-стили для <tr>, рисующие индикатор вставки.

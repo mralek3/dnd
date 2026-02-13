@@ -1,11 +1,11 @@
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import { Table } from 'antd';
 import type { TableProps, TableColumnsType } from 'antd';
-import { DragHandle } from '../drag-handle';
+import { DragHandle } from './ui/drag-handle';
 import { DraggableRow } from './ui/draggable-row';
-import { useDragHandleRef } from './lib/drag-handle-context';
-import { TreeDndProvider } from './lib/tree-dnd-context';
-import type { TreeNodeMeta, ReorderEvent } from './lib/types';
+import { useDragHandleRef } from './model/drag-handle-context';
+import { TreeDndProvider } from './model/tree-dnd-context';
+import type { TreeNodeMeta, ReorderEvent } from './model/types';
 
 // ─── DragHandleCell ───────────────────────────────────────────────────
 

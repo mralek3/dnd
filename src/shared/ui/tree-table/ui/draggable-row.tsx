@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import type { HTMLAttributes } from 'react';
-import { useDraggableRow } from '../lib/use-draggable-row';
-import { useDropTargetRow } from '../lib/use-drop-target-row';
-import { DragHandleContext } from '../lib/drag-handle-context';
-import { useIndicatorForRow } from '../lib/tree-dnd-context';
+import { useDraggableRow } from '../model/hooks/use-draggable-row';
+import { useDropTargetRow } from '../model/hooks/use-drop-target-row';
+import { DragHandleContext } from '../model/drag-handle-context';
+import { useIndicatorForRow } from '../model/tree-dnd-context';
 import { getDropIndicatorStyle } from './row-drop-indicator';
 
 interface DraggableRowProps extends HTMLAttributes<HTMLTableRowElement> {

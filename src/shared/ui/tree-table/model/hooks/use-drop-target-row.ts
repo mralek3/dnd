@@ -4,10 +4,10 @@ import {
     attachClosestEdge,
     extractClosestEdge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { useTreeDnd } from './tree-dnd-context';
-import { computeDropResult } from './compute-drop-result';
-import type { RawInstruction } from './compute-drop-result';
-import type { DragSourceData } from './types';
+import { useTreeDnd } from '../tree-dnd-context';
+import { computeDropResult } from '../../lib/compute-drop-result';
+import type { RawInstruction } from '../../lib/compute-drop-result';
+import type { DragSourceData } from '../types';
 
 // Символы для маркировки инструкций в userData
 const MAKE_CHILD_KEY = Symbol('make-child');
