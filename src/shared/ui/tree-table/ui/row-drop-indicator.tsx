@@ -7,8 +7,10 @@ import type { IndicatorType } from '../model/types';
  * - 'below'      → синяя линия снизу
  * - 'make-child' → обводка всей строки (outline)
  */
-export function getDropIndicatorStyle(indicator: IndicatorType | null): React.CSSProperties {
-    if (!indicator) return {};
+export const getDropIndicatorStyle = (indicator: IndicatorType | null): React.CSSProperties => {
+    if (!indicator) {
+        return {};
+    }
 
     switch (indicator) {
         case 'above':
@@ -27,4 +29,4 @@ export function getDropIndicatorStyle(indicator: IndicatorType | null): React.CS
         default:
             return {};
     }
-}
+};
