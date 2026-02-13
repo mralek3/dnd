@@ -14,13 +14,6 @@ interface DraggableRowProps extends HTMLAttributes<HTMLTableRowElement> {
     draggable: boolean;
 }
 
-/**
- * Компонент строки таблицы с поддержкой drag-and-drop.
- *
- * Индикатор берётся из централизованного store (через useIndicatorForRow),
- * а не из локального состояния drop-target'а. Это позволяет правилам 3 и 5
- * отображать индикатор на строке, отличной от той, над которой курсор.
- */
 export const DraggableRow = ({
     'data-row-key': rowKey,
     index,
@@ -46,7 +39,6 @@ export const DraggableRow = ({
         enabled: isDraggable
     });
 
-    // Индикатор из centralized store
     const indicatorType = useIndicatorForRow(rowKey);
     const indicatorStyle = getDropIndicatorStyle(indicatorType);
 

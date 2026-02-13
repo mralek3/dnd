@@ -7,20 +7,11 @@ import { useDragHandleRef } from './model/drag-handle-context';
 import { TreeDndProvider } from './model/tree-dnd-context';
 import type { TreeNodeMeta, ReorderEvent } from './model/types';
 
-// ─── DragHandleCell ──────────────────────────────────────────────────
-
 const DragHandleCell = () => {
     const dragHandleRef = useDragHandleRef();
     return <DragHandle innerRef={dragHandleRef} />;
 };
 
-// ─── Построение карты метаданных дерева ──────────────────────────────
-
-/**
- * Рекурсивно строит полную карту { rowKey → TreeNodeMeta } по дереву данных.
- * Обходит все узлы (включая collapsed), чтобы computeDropResult имел
- * полную информацию о структуре дерева.
- */
 const buildNodeMap = <T extends Record<string, unknown>>(
     data: readonly T[],
     level: number,
@@ -40,8 +31,6 @@ const buildNodeMap = <T extends Record<string, unknown>>(
         const hasChildren = Array.isArray(children) && children.length > 0;
         const isExpanded = hasChildren && expandedKeys.has(key);
 
-        // childKeys — только непосредственные дети.
-        // Заполняются даже для свёрнутых узлов (нужно для правила 4 — no-op detection).
         const childKeys = hasChildren
             ? children.map(c => {
                   return hasKeyProperty(c) ? String(c.key) : '';
@@ -59,15 +48,11 @@ const buildNodeMap = <T extends Record<string, unknown>>(
             siblingKeys
         });
 
-        // Рекурсия по всем дочерним элементам (не только раскрытым),
-        // чтобы иметь полную карту для проверок isAncestor и т.п.
         if (hasChildren) {
             buildNodeMap(children, level + 1, key, map, expandedKeys, childrenColumnName);
         }
     });
 };
-
-// ─── TreeTable ───────────────────────────────────────────────────────
 
 interface TreeTableProps<T> extends Omit<TableProps<T>, 'columns'> {
     columns: TableColumnsType<T>;
@@ -75,9 +60,6 @@ interface TreeTableProps<T> extends Omit<TableProps<T>, 'columns'> {
     onReorder?: (event: ReorderEvent) => void;
 }
 
-/**
- * Проверяет, есть ли у объекта свойство key
- */
 const hasKeyProperty = (obj: unknown): obj is Record<string, unknown> & { key: unknown } => {
     return typeof obj === 'object' && obj !== null && 'key' in obj;
 };
@@ -90,13 +72,12 @@ export const TreeTable = <T extends Record<string, unknown>>({
     dataSource,
     ...restProps
 }: TreeTableProps<T>) => {
-    // Helper для безопасного доступа к свойствам expandable
-    // Antd не экспортирует полные типы для ExpandableConfig
+
     const getExpandableProperty = <K extends string>(key: K): unknown => {
         if (!expandable || typeof expandable !== 'object') {
             return undefined;
         }
-        // Безопасное приведение для доступа к свойствам объекта Antd
+
         const obj = expandable as unknown;
         return (obj as Record<string, unknown>)[key];
     };
@@ -105,7 +86,6 @@ export const TreeTable = <T extends Record<string, unknown>>({
     const childrenColumnName =
         typeof childrenColumnNameValue === 'string' ? childrenColumnNameValue : 'children';
 
-    // ─── Отслеживание раскрытых строк ────────────────────────────────────
     const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
     const handleExpand = useCallback(
@@ -137,7 +117,6 @@ export const TreeTable = <T extends Record<string, unknown>>({
         }
     }, [expandable]);
 
-    // ─── Полная карта метаданных узлов ───────────────────────────────────
     const nodeMap = useMemo(() => {
         const map = new Map<string, TreeNodeMeta>();
 
@@ -148,7 +127,6 @@ export const TreeTable = <T extends Record<string, unknown>>({
         return map;
     }, [dataSource, expandedKeys, childrenColumnName]);
 
-    // ─── Columns ─────────────────────────────────────────────────────────
     const allColumns = useMemo(() => {
         if (!draggable) {
             return columns;
@@ -163,7 +141,6 @@ export const TreeTable = <T extends Record<string, unknown>>({
         return [dragColumn, ...columns];
     }, [columns, draggable]);
 
-    // ─── Expandable config ───────────────────────────────────────────────
     const expandableConfig = useMemo(() => {
         const base = draggable
             ? { childrenColumnName, ...expandable, expandIconColumnIndex: 1 }
@@ -171,7 +148,6 @@ export const TreeTable = <T extends Record<string, unknown>>({
         return { ...base, onExpand: handleExpand };
     }, [draggable, expandable, handleExpand, childrenColumnName]);
 
-    // ─── Custom row component ────────────────────────────────────────────
     const components = useMemo(() => {
         if (!draggable) {
             return undefined;
@@ -197,7 +173,6 @@ export const TreeTable = <T extends Record<string, unknown>>({
         };
     }, [draggable, nodeMap]);
 
-    // ─── Render ──────────────────────────────────────────────────────────
     const table = (
         <Table
             {...restProps}

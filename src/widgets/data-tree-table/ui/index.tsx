@@ -32,12 +32,8 @@ const columns: TableColumnsType<DataNode> = [
     }
 ];
 
-/**
- * Плоский список данных с UUID ключами и parentId
- * (как приходит с бэкенда)
- */
 const flatMockData: DataNode[] = [
-    // Корневой элемент 1
+
     {
         key: '550e8400-e29b-41d4-a716-446655440000',
         name: 'John Brown',
@@ -45,7 +41,7 @@ const flatMockData: DataNode[] = [
         address: 'New York No. 1 Lake Park',
         parentId: null
     },
-    // Дети элемента 1
+
     {
         key: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
         name: 'Jim Green',
@@ -60,7 +56,7 @@ const flatMockData: DataNode[] = [
         address: 'Sydney No. 1 Lake Park',
         parentId: '550e8400-e29b-41d4-a716-446655440000'
     },
-    // Внуки элемента 1 (дети Jim Green)
+
     {
         key: '6ba7b812-9dad-11d1-80b4-00c04fd430c8',
         name: 'Jimmy Green',
@@ -75,7 +71,7 @@ const flatMockData: DataNode[] = [
         address: 'London No. 4 Lake Park',
         parentId: '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
     },
-    // Внуки элемента 1 (дети Joe Black)
+
     {
         key: '6ba7b814-9dad-11d1-80b4-00c04fd430c8',
         name: 'Joey Black',
@@ -83,7 +79,7 @@ const flatMockData: DataNode[] = [
         address: 'Sydney No. 2 Lake Park',
         parentId: '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
     },
-    // Корневой элемент 2
+
     {
         key: '6ba7b815-9dad-11d1-80b4-00c04fd430c8',
         name: 'Jane Doe',
@@ -91,7 +87,7 @@ const flatMockData: DataNode[] = [
         address: 'Los Angeles No. 5 Street',
         parentId: null
     },
-    // Дети элемента 2
+
     {
         key: '6ba7b816-9dad-11d1-80b4-00c04fd430c8',
         name: 'Janet Doe',
@@ -99,7 +95,7 @@ const flatMockData: DataNode[] = [
         address: 'Los Angeles No. 6 Street',
         parentId: '6ba7b815-9dad-11d1-80b4-00c04fd430c8'
     },
-    // Внуки элемента 2
+
     {
         key: '6ba7b817-9dad-11d1-80b4-00c04fd430c8',
         name: 'Jennifer Doe',
@@ -110,17 +106,11 @@ const flatMockData: DataNode[] = [
 ];
 
 export const DataTreeTable = () => {
-    /**
-     * Преобразуем плоский список с parentId в древовидную структуру с children
-     */
+
     const treeData = useMemo(() => {
         return buildTreeFromFlat<DataNode>(flatMockData);
     }, []);
 
-    /**
-     * Обработчик завершения перетаскивания строки
-     * Выводит информацию о перетаскивании в консоль
-     */
     const handleReorder = (event: ReorderEvent) => {
         console.log('Reorder event:', {
             sourceKey: event.sourceKey,
@@ -128,12 +118,6 @@ export const DataTreeTable = () => {
             position: event.position
         });
 
-        // Здесь будет логика для фактического изменения порядка данных
-        // Например:
-        // 1. Обновить parentId у sourceKey
-        // 2. Пересчитать порядок элементов (если есть поле order/position)
-        // 3. Отправить изменения на бэкенд
-        // 4. Обновить локальное состояние
     };
 
     return (

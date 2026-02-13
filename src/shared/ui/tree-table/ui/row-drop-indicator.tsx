@@ -1,12 +1,5 @@
 import type { IndicatorType } from '../model/types';
 
-/**
- * Возвращает inline-стили для <tr>, рисующие индикатор вставки.
- *
- * - 'above'      → синяя линия сверху
- * - 'below'      → синяя линия снизу
- * - 'make-child' → обводка всей строки (outline)
- */
 export const getDropIndicatorStyle = (indicator: IndicatorType | null): React.CSSProperties => {
     if (!indicator) {
         return {};

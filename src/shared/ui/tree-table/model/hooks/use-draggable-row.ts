@@ -9,12 +9,6 @@ interface UseDraggableRowProps {
     enabled: boolean;
 }
 
-/**
- * Hook для добавления drag функциональности к drag handle кнопке.
- *
- * Передаёт level и parentKey в source data, что позволяет drop target
- * определить допустимые позиции для перетаскивания (правило 1).
- */
 export const useDraggableRow = ({
     rowKey,
     rowIndex,
