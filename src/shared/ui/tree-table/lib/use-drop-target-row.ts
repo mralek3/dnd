@@ -9,8 +9,9 @@ import { computeDropResult } from './compute-drop-result';
 import type { RawInstruction } from './compute-drop-result';
 import type { DropTargetData, DragSourceData } from './types';
 
-// Символ для маркировки make-child в userData
+// Символы для маркировки инструкций в userData
 const MAKE_CHILD_KEY = Symbol('make-child');
+const DESCENDANT_KEY = Symbol('descendant');
 
 interface UseDropTargetRowProps {
     rowKey: string;
@@ -68,6 +69,12 @@ export const useDropTargetRow = ({
                 if (sourceData.level - 1 === level) {
                     // Уровень потенциального родителя → make-child
                     return { ...data, [MAKE_CHILD_KEY]: true };
+                }
+
+                if (level > sourceData.level) {
+                    // Вложенный потомок элемента того же уровня → будет
+                    // перенаправлен в computeDropResult на «below ancestor»
+                    return { ...data, [DESCENDANT_KEY]: true };
                 }
 
                 // Другие уровни → нет валидных инструкций
@@ -132,6 +139,9 @@ export const useDropTargetRow = ({
         ): RawInstruction | null {
             // Проверяем make-child маркер
             if (data[MAKE_CHILD_KEY]) return 'make-child';
+
+            // Проверяем descendant маркер (будет перенаправлен на «below ancestor»)
+            if (data[DESCENDANT_KEY]) return 'below-ancestor';
 
             // Проверяем closest-edge
             const edge = extractClosestEdge(data);

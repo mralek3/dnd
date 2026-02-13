@@ -3,7 +3,7 @@ import type { TreeNodeMeta, VisualIndicator, ReorderEvent } from './types';
 /**
  * Тип raw-инструкции из hitbox (closest-edge или make-child)
  */
-export type RawInstruction = 'above' | 'below' | 'make-child';
+export type RawInstruction = 'above' | 'below' | 'make-child' | 'below-ancestor';
 
 /**
  * Результат вычисления drop-операции
@@ -48,6 +48,24 @@ function isAncestor(
 }
 
 /**
+ * Находит предка `key` на заданном уровне вложенности.
+ * Нужен для обработки drop на вложенный потомок: перенаправляем на «below ancestor».
+ */
+function findAncestorAtLevel(
+    key: string,
+    targetLevel: number,
+    nodeMap: Map<string, TreeNodeMeta>
+): string | null {
+    let current = nodeMap.get(key);
+    while (current) {
+        if (current.level === targetLevel) return current.key;
+        if (current.parentKey == null) break;
+        current = nodeMap.get(current.parentKey);
+    }
+    return null;
+}
+
+/**
  * Основная функция: вычисляет результат drop-операции с учётом всех правил.
  *
  * Правила:
@@ -75,6 +93,16 @@ export function computeDropResult(
 
     // Нельзя перемещать элемент в собственного потомка
     if (isAncestor(sourceKey, targetKey, nodeMap)) return BLOCKED;
+
+    // ── Правило 6: drop на вложенный потомок элемента того же уровня ──
+    // Перенаправляем на «below ancestor» (предок на уровне source)
+    if (rawInstruction === 'below-ancestor') {
+        const ancestorKey = findAncestorAtLevel(targetKey, source.level, nodeMap);
+        if (!ancestorKey) return BLOCKED;
+        // Рекурсивно вызываем с «below» на найденного предка — все правила
+        // (no-op, правило 5 для развёрнутых) применятся автоматически.
+        return computeDropResult(sourceKey, ancestorKey, 'below', nodeMap);
+    }
 
     // ── Правило 1: проверяем допустимость по уровням ──
     if (rawInstruction === 'above' || rawInstruction === 'below') {
