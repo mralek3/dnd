@@ -1,5 +1,5 @@
 export { TreeTable } from './tree-table';
-export { DragHandle } from './drag-handle';
+export { DragHandle } from './tree-table/ui/drag-handle';
 
 // Экспорт типов для drag-and-drop
 export type {
@@ -7,4 +7,4 @@ export type {
     VisualIndicator,
     IndicatorType,
     TreeNodeMeta
-} from './tree-table/lib/types';
+} from './tree-table/model/types';
