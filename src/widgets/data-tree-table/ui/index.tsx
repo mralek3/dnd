@@ -104,15 +104,9 @@ export const DataTreeTable = () => {
      */
     const handleReorder = (event: ReorderEvent) => {
         console.log('Reorder event:', {
-            source: {
-                key: event.sourceKey,
-                index: event.sourceIndex
-            },
-            target: {
-                key: event.targetKey,
-                index: event.targetIndex
-            },
-            instruction: event.instruction
+            sourceKey: event.sourceKey,
+            targetKey: event.targetKey,
+            position: event.position
         });
 
         // Здесь будет логика для фактического изменения порядка данных

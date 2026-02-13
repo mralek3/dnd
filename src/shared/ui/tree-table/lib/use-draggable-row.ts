@@ -1,47 +1,44 @@
 import { useEffect, useRef } from 'react';
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import type { DragSourceData } from './types';
 
-/**
- * Параметры для hook использования перетаскивания строки
- */
 interface UseDraggableRowProps {
-    /** Уникальный ключ строки */
     rowKey: string;
-    /** Индекс строки в массиве данных */
     rowIndex: number;
-    /** Включено ли перетаскивание */
+    level: number;
+    parentKey: string | null;
     enabled: boolean;
 }
 
 /**
- * Hook для добавления drag функциональности к drag handle кнопке
+ * Hook для добавления drag функциональности к drag handle кнопке.
  *
- * Делает drag handle перетаскиваемым элементом и передает данные о строке
- * при начале перетаскивания.
- *
- * @returns ref для привязки к drag handle элементу
+ * Передаёт level и parentKey в source data, что позволяет drop target
+ * определить допустимые позиции для перетаскивания (правило 1).
  */
-export const useDraggableRow = ({ rowKey, rowIndex, enabled }: UseDraggableRowProps) => {
+export const useDraggableRow = ({
+    rowKey,
+    rowIndex,
+    level,
+    parentKey,
+    enabled
+}: UseDraggableRowProps) => {
     const dragHandleRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
         const element = dragHandleRef.current;
-
-        // Если перетаскивание выключено или элемент не найден - ничего не делаем
         if (!enabled || !element) return;
 
-        // Регистрируем элемент как перетаскиваемый
         return draggable({
             element,
-            // Данные, которые будут доступны во время перетаскивания
-            getInitialData: (): DragSourceData => ({
+            getInitialData: () => ({
                 type: 'tree-row',
                 rowKey,
-                rowIndex
-            })
+                rowIndex,
+                level,
+                parentKey
+            } as unknown as Record<string, unknown>)
         });
-    }, [rowKey, rowIndex, enabled]);
+    }, [rowKey, rowIndex, level, parentKey, enabled]);
 
     return dragHandleRef;
 };

@@ -1,133 +1,146 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
-    attachInstruction,
-    extractInstruction
-} from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type {
-    Instruction,
-    ItemMode
-} from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type { DropTargetData, ReorderEvent, DragSourceData } from './types';
+    attachClosestEdge,
+    extractClosestEdge
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { useTreeDnd } from './tree-dnd-context';
+import { computeDropResult } from './compute-drop-result';
+import type { RawInstruction } from './compute-drop-result';
+import type { DropTargetData, DragSourceData } from './types';
 
-/**
- * Параметры для hook использования drop target
- */
+// Символ для маркировки make-child в userData
+const MAKE_CHILD_KEY = Symbol('make-child');
+
 interface UseDropTargetRowProps {
-    /** Уникальный ключ строки */
     rowKey: string;
-    /** Индекс строки в массиве данных */
     rowIndex: number;
-    /** Уровень вложенности строки (0 — корень) */
     level: number;
-    /** Режим элемента дерева (standard, expanded, last-in-group) */
-    mode: ItemMode;
-    /** Включено ли перетаскивание */
     enabled: boolean;
-    /** Коллбек вызываемый при завершении перетаскивания */
-    onReorder?: (event: ReorderEvent) => void;
 }
 
-/** Отступ на один уровень вложенности (в px) */
-const INDENT_PER_LEVEL = 24;
-
 /**
- * Hook для добавления drop target функциональности к строке таблицы.
+ * Hook для drop target на строке таблицы.
  *
- * Использует tree-item hitbox из pragmatic-drag-and-drop для определения
- * позиции курсора: reorder-above, reorder-below или make-child.
+ * Определяет raw-инструкцию (above / below / make-child) на основе:
+ * - closest-edge hitbox (top/bottom) для элементов того же уровня
+ * - простого make-child для элементов уровнем выше
  *
- * @returns объект с ref для строки и текущей инструкцией (для индикатора)
+ * Затем передаёт инструкцию в computeDropResult для применения правил 1—5
+ * и обновляет centralised indicator store.
  */
 export const useDropTargetRow = ({
     rowKey,
     rowIndex,
     level,
-    mode,
-    enabled,
-    onReorder
+    enabled
 }: UseDropTargetRowProps) => {
     const rowRef = useRef<HTMLTableRowElement>(null);
+    const { nodeMap, indicatorStore, onReorder } = useTreeDnd();
 
-    // Текущая инструкция (для отображения индикатора)
-    const [instruction, setInstruction] = useState<Instruction | null>(null);
+    // Храним в ref чтобы не пересоздавать dropTarget при изменении nodeMap/onReorder
+    const nodeMapRef = useRef(nodeMap);
+    nodeMapRef.current = nodeMap;
+
+    const onReorderRef = useRef(onReorder);
+    onReorderRef.current = onReorder;
 
     useEffect(() => {
         const element = rowRef.current;
-
-        // Если перетаскивание выключено или элемент не найден — ничего не делаем
         if (!enabled || !element) return;
 
-        // Регистрируем элемент как drop target
         return dropTargetForElements({
             element,
 
-            // Получаем данные о drop target и добавляем tree-item инструкцию
-            getData: ({ input, element }) => {
-                const data: DropTargetData = {
-                    rowKey,
-                    rowIndex
-                };
-
-                // attachInstruction определяет позицию курсора:
-                // - верхние ~25% → reorder-above
-                // - нижние ~25% → reorder-below
-                // - центр → make-child
-                return attachInstruction(
-                    data as unknown as Record<string | symbol, unknown>,
-                    {
-                        input,
-                        element,
-                        currentLevel: level,
-                        indentPerLevel: INDENT_PER_LEVEL,
-                        mode
-                    }
-                );
-            },
-
-            // Когда курсор входит в область строки
-            onDragEnter: ({ self }) => {
-                setInstruction(extractInstruction(self.data));
-            },
-
-            // Когда курсор движется внутри строки
-            onDrag: ({ self }) => {
-                setInstruction(extractInstruction(self.data));
-            },
-
-            // Когда курсор покидает область строки
-            onDragLeave: () => {
-                setInstruction(null);
-            },
-
-            // Когда элемент отпущен над строкой
-            onDrop: ({ source, self }) => {
-                // Сбрасываем индикатор
-                setInstruction(null);
-
-                // Извлекаем данные источника (перетаскиваемая строка)
+            getData: ({ input, element, source }) => {
+                const data: DropTargetData = { rowKey, rowIndex };
                 const sourceData = source.data as unknown as DragSourceData;
 
-                // Извлекаем данные цели (текущая строка)
-                const targetData = self.data as unknown as DropTargetData;
+                // Определяем, какой тип hit detection использовать
+                if (sourceData.level === level) {
+                    // Тот же уровень → closest-edge (top/bottom)
+                    return attachClosestEdge(
+                        data as unknown as Record<string | symbol, unknown>,
+                        { input, element, allowedEdges: ['top', 'bottom'] }
+                    );
+                }
 
-                // Извлекаем инструкцию
-                const dropInstruction = extractInstruction(self.data);
+                if (sourceData.level - 1 === level) {
+                    // Уровень потенциального родителя → make-child
+                    return { ...data, [MAKE_CHILD_KEY]: true };
+                }
 
-                // Вызываем коллбек с полной информацией о перетаскивании
-                onReorder?.({
-                    sourceKey: sourceData.rowKey,
-                    sourceIndex: sourceData.rowIndex,
-                    targetKey: targetData.rowKey,
-                    targetIndex: targetData.rowIndex,
-                    instruction: dropInstruction
-                });
+                // Другие уровни → нет валидных инструкций
+                return data as unknown as Record<string | symbol, unknown>;
+            },
+
+            onDragEnter: ({ source, self }) => {
+                updateIndicator(source, self.data);
+            },
+
+            onDrag: ({ source, self }) => {
+                updateIndicator(source, self.data);
+            },
+
+            onDragLeave: () => {
+                indicatorStore.set(null);
+            },
+
+            onDrop: ({ source, self }) => {
+                indicatorStore.set(null);
+
+                const raw = extractRawInstruction(self.data);
+                if (!raw) return;
+
+                const sourceData = source.data as unknown as DragSourceData;
+                const result = computeDropResult(
+                    sourceData.rowKey,
+                    rowKey,
+                    raw,
+                    nodeMapRef.current
+                );
+
+                if (result.event) {
+                    onReorderRef.current?.(result.event);
+                }
             }
         });
-    }, [rowKey, rowIndex, level, mode, enabled, onReorder]);
 
-    return {
-        rowRef,
-        instruction // Для отображения drop indicator
-    };
+        function updateIndicator(
+            source: { data: Record<string, unknown> },
+            selfData: Record<string | symbol, unknown>
+        ) {
+            const raw = extractRawInstruction(selfData);
+            if (!raw) {
+                indicatorStore.set(null);
+                return;
+            }
+
+            const sourceData = source.data as unknown as DragSourceData;
+            const result = computeDropResult(
+                sourceData.rowKey,
+                rowKey,
+                raw,
+                nodeMapRef.current
+            );
+
+            indicatorStore.set(result.indicator);
+        }
+
+        function extractRawInstruction(
+            data: Record<string | symbol, unknown>
+        ): RawInstruction | null {
+            // Проверяем make-child маркер
+            if (data[MAKE_CHILD_KEY]) return 'make-child';
+
+            // Проверяем closest-edge
+            const edge = extractClosestEdge(data);
+            if (edge === 'top') return 'above';
+            if (edge === 'bottom') return 'below';
+
+            return null;
+        }
+    }, [rowKey, rowIndex, level, enabled, indicatorStore]);
+
+    return { rowRef };
 };
