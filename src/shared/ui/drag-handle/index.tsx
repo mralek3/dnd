@@ -6,7 +6,7 @@ interface DragHandleProps {
   className?: string;
   style?: CSSProperties;
   /** Внутренний ref для подключения drag функциональности */
-  innerRef?: React.RefObject<HTMLElement>;
+  innerRef?: React.RefObject<HTMLElement | null>;
 }
 
 /**

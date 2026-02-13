@@ -6,6 +6,18 @@ import { DraggableRow } from './ui/draggable-row';
 import { useDragHandleRef } from './lib/drag-handle-context';
 import type { ReorderEvent } from './lib/types';
 
+/**
+ * Компонент ячейки с drag handle.
+ *
+ * Вынесен в отдельный компонент, чтобы хук useDragHandleRef()
+ * вызывался в собственном контексте компонента, а не внутри
+ * render-функции колонки (что нарушает правила хуков React).
+ */
+const DragHandleCell = () => {
+    const dragHandleRef = useDragHandleRef();
+    return <DragHandle innerRef={dragHandleRef} />;
+};
+
 interface TreeTableProps<T> extends Omit<TableProps<T>, 'columns'> {
     columns: TableColumnsType<T>;
     draggable?: boolean;
@@ -30,12 +42,7 @@ export const TreeTable = <T extends object>({
             key: '__drag__',
             title: '',
             width: 40,
-            render: () => {
-                // Получаем ref из контекста (передается от DraggableRow)
-                // eslint-disable-next-line react-hooks/rules-of-hooks
-                const dragHandleRef = useDragHandleRef();
-                return <DragHandle innerRef={dragHandleRef} />;
-            }
+            render: () => <DragHandleCell />
         };
 
         // Добавляем drag столбец первым

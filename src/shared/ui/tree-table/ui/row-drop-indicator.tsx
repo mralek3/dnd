@@ -1,34 +1,22 @@
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 
 /**
- * Параметры компонента индикатора вставки
- */
-interface RowDropIndicatorProps {
-    /** Позиция индикатора относительно строки */
-    edge: Edge | null;
-}
-
-/**
- * Визуальный индикатор показывающий куда будет вставлена строка
+ * Возвращает inline-стили для <tr>, рисующие индикатор вставки
+ * через box-shadow (надёжно работает на <tr> во всех браузерах).
  *
- * Отображается как синяя линия сверху или снизу строки в зависимости
- * от позиции курсора во время перетаскивания.
+ * Прежний вариант рендерил <div> внутри <tr>, что невалидно в HTML.
+ * Браузеры выносили <div> за структуру таблицы, из-за чего индикатор
+ * отображался над/под всей таблицей, а не над/под конкретной строкой.
  */
-export const RowDropIndicator = ({ edge }: RowDropIndicatorProps) => {
-    // Если нет позиции - не отображаем индикатор
-    if (!edge) return null;
+export function getDropIndicatorStyle(edge: Edge | null): React.CSSProperties {
+    if (!edge) return {};
 
-    // Определяем стили в зависимости от позиции
-    const style: React.CSSProperties = {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        height: '2px',
-        backgroundColor: '#1890ff', // Синий цвет Ant Design
-        zIndex: 1,
-        pointerEvents: 'none', // Индикатор не должен перехватывать события мыши
-        ...(edge === 'top' ? { top: -1 } : { bottom: -1 })
-    };
+    // Используем box-shadow — он рисуется относительно элемента
+    // и корректно работает с <tr> (в отличие от position: relative + absolute дочернего).
+    // inset — для внутреннего shadow, не сдвигает layout.
+    if (edge === 'top') {
+        return { boxShadow: 'inset 0 2px 0 0 #1890ff' };
+    }
 
-    return <div style={style} />;
-};
+    return { boxShadow: 'inset 0 -2px 0 0 #1890ff' };
+}

@@ -7,7 +7,7 @@ import { createContext, useContext } from 'react';
  * drag функциональности без явной передачи через props.
  */
 interface DragHandleContextValue {
-    dragHandleRef: React.RefObject<HTMLElement>;
+    dragHandleRef: React.RefObject<HTMLElement | null>;
 }
 
 export const DragHandleContext = createContext<DragHandleContextValue | null>(null);

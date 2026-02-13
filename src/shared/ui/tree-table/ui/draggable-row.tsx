@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'react';
 import { useDraggableRow } from '../lib/use-draggable-row';
 import { useDropTargetRow } from '../lib/use-drop-target-row';
 import { DragHandleContext } from '../lib/drag-handle-context';
-import { RowDropIndicator } from './row-drop-indicator';
+import { getDropIndicatorStyle } from './row-drop-indicator';
 import type { ReorderEvent } from '../lib/types';
 
 /**
@@ -32,6 +32,7 @@ export const DraggableRow = ({
     draggable: isDraggable,
     onReorder,
     children,
+    style,
     ...restProps
 }: DraggableRowProps) => {
     // Hook для drag handle (будет подключен к кнопке внутри строки)
@@ -56,17 +57,18 @@ export const DraggableRow = ({
         [dragHandleRef]
     );
 
+    // Стили индикатора через box-shadow (надёжно работает на <tr>)
+    const indicatorStyle = getDropIndicatorStyle(closestEdge);
+
     return (
         <DragHandleContext.Provider value={contextValue}>
             <tr
                 ref={rowRef}
                 data-row-key={rowKey}
-                style={{ position: 'relative' }} // Для позиционирования индикатора
+                style={{ ...style, ...indicatorStyle }}
                 {...restProps}
             >
                 {children}
-                {/* Индикатор вставки */}
-                <RowDropIndicator edge={closestEdge} />
             </tr>
         </DragHandleContext.Provider>
     );
