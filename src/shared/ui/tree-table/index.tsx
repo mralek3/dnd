@@ -39,9 +39,7 @@ function buildNodeMap<T extends Record<string, any>>(
 
         // childKeys — только непосредственные дети.
         // Заполняются даже для свёрнутых узлов (нужно для правила 4 — no-op detection).
-        const childKeys = hasChildren
-            ? children.map((c: T) => String(c.key))
-            : [];
+        const childKeys = hasChildren ? children.map((c: T) => String(c.key)) : [];
 
         map.set(key, {
             key,

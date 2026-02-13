@@ -3,10 +3,10 @@ import { HolderOutlined } from '@ant-design/icons';
 import type { CSSProperties } from 'react';
 
 interface DragHandleProps {
-  className?: string;
-  style?: CSSProperties;
-  /** Внутренний ref для подключения drag функциональности */
-  innerRef?: React.RefObject<HTMLElement | null>;
+    className?: string;
+    style?: CSSProperties;
+    /** Внутренний ref для подключения drag функциональности */
+    innerRef?: React.RefObject<HTMLElement | null>;
 }
 
 /**
@@ -17,17 +17,17 @@ interface DragHandleProps {
  * через pragmatic-drag-and-drop.
  */
 export const DragHandle = ({ className, style, innerRef }: DragHandleProps) => {
-  return (
-    <Button
-      ref={innerRef as any}
-      type="text"
-      icon={<HolderOutlined />}
-      className={className}
-      style={{
-        cursor: 'grab',
-        ...style
-      }}
-      aria-label="Drag to reorder"
-    />
-  );
+    return (
+        <Button
+            ref={innerRef as any}
+            type='text'
+            icon={<HolderOutlined />}
+            className={className}
+            style={{
+                cursor: 'grab',
+                ...style
+            }}
+            aria-label='Drag to reorder'
+        />
+    );
 };

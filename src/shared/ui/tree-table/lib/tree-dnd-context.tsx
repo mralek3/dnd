@@ -1,4 +1,11 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from 'react';
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useMemo,
+    useRef,
+    useSyncExternalStore
+} from 'react';
 import type { TreeNodeMeta, VisualIndicator, IndicatorType, ReorderEvent } from './types';
 
 // ─── External store ──────────────────────────────────────────────────
@@ -18,7 +25,9 @@ function createIndicatorStore() {
         },
         subscribe: (listener: () => void) => {
             listeners.add(listener);
-            return () => { listeners.delete(listener); };
+            return () => {
+                listeners.delete(listener);
+            };
         }
     };
 }
@@ -77,15 +86,14 @@ export function TreeDndProvider({ nodeMap, onReorder, children }: TreeDndProvide
         storeRef.current = createIndicatorStore();
     }
 
-    const value = useMemo<TreeDndContextValue>(() => ({
-        nodeMap,
-        indicatorStore: storeRef.current!,
-        onReorder
-    }), [nodeMap, onReorder]);
-
-    return (
-        <TreeDndContext.Provider value={value}>
-            {children}
-        </TreeDndContext.Provider>
+    const value = useMemo<TreeDndContextValue>(
+        () => ({
+            nodeMap,
+            indicatorStore: storeRef.current!,
+            onReorder
+        }),
+        [nodeMap, onReorder]
     );
+
+    return <TreeDndContext.Provider value={value}>{children}</TreeDndContext.Provider>;
 }

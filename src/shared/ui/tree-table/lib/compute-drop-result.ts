@@ -19,10 +19,7 @@ export interface DropResult {
  * Находит последний видимый потомок узла (рекурсивно по раскрытым потомкам).
  * Нужен для правила 5: индикатор «под развёрнутым» ставится после его последнего потомка.
  */
-function getLastVisibleDescendant(
-    key: string,
-    nodeMap: Map<string, TreeNodeMeta>
-): string {
+function getLastVisibleDescendant(key: string, nodeMap: Map<string, TreeNodeMeta>): string {
     const node = nodeMap.get(key);
     if (!node || !node.isExpanded || node.childKeys.length === 0) {
         return key;
@@ -124,8 +121,7 @@ export function computeDropResult(
 
             // Проверяем no-op: source уже стоит прямо перед firstChild?
             const firstChild = nodeMap.get(firstChildKey);
-            if (firstChild && source.parentKey === target.key &&
-                source.indexAmongSiblings === 0) {
+            if (firstChild && source.parentKey === target.key && source.indexAmongSiblings === 0) {
                 return BLOCKED; // source уже первый ребёнок этого родителя
             }
 

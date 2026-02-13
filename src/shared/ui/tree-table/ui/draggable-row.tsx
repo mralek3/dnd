@@ -50,10 +50,7 @@ export const DraggableRow = ({
     const indicatorType = useIndicatorForRow(rowKey);
     const indicatorStyle = getDropIndicatorStyle(indicatorType);
 
-    const contextValue = useMemo(
-        () => ({ dragHandleRef }),
-        [dragHandleRef]
-    );
+    const contextValue = useMemo(() => ({ dragHandleRef }), [dragHandleRef]);
 
     return (
         <DragHandleContext.Provider value={contextValue}>

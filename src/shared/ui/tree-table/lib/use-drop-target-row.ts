@@ -7,7 +7,7 @@ import {
 import { useTreeDnd } from './tree-dnd-context';
 import { computeDropResult } from './compute-drop-result';
 import type { RawInstruction } from './compute-drop-result';
-import type { DropTargetData, DragSourceData } from './types';
+import type { DragSourceData } from './types';
 
 // Символы для маркировки инструкций в userData
 const MAKE_CHILD_KEY = Symbol('make-child');
@@ -30,12 +30,7 @@ interface UseDropTargetRowProps {
  * Затем передаёт инструкцию в computeDropResult для применения правил 1—5
  * и обновляет centralised indicator store.
  */
-export const useDropTargetRow = ({
-    rowKey,
-    rowIndex,
-    level,
-    enabled
-}: UseDropTargetRowProps) => {
+export const useDropTargetRow = ({ rowKey, rowIndex, level, enabled }: UseDropTargetRowProps) => {
     const rowRef = useRef<HTMLTableRowElement>(null);
     const { nodeMap, indicatorStore, onReorder } = useTreeDnd();
 
@@ -48,37 +43,104 @@ export const useDropTargetRow = ({
 
     useEffect(() => {
         const element = rowRef.current;
-        if (!enabled || !element) return;
+        if (!enabled || !element) {
+            return;
+        }
+
+        const isDragSourceData = (data: unknown): data is DragSourceData => {
+            if (typeof data !== 'object' || data === null) {
+                return false;
+            }
+
+            const record = data as Record<string, unknown>;
+            return (
+                typeof record.rowKey === 'string' &&
+                typeof record.rowIndex === 'number' &&
+                typeof record.level === 'number' &&
+                record.type === 'tree-row'
+            );
+        };
+
+        const updateIndicator = (
+            source: { data: Record<string, unknown> },
+            selfData: Record<string | symbol, unknown>
+        ) => {
+            const raw = extractRawInstruction(selfData);
+            if (!raw) {
+                indicatorStore.set(null);
+                return;
+            }
+
+            if (!isDragSourceData(source.data)) {
+                return;
+            }
+
+            const result = computeDropResult(source.data.rowKey, rowKey, raw, nodeMapRef.current);
+
+            indicatorStore.set(result.indicator);
+        };
+
+        const extractRawInstruction = (
+            data: Record<string | symbol, unknown>
+        ): RawInstruction | null => {
+            // Проверяем make-child маркер
+            if (data[MAKE_CHILD_KEY]) {
+                return 'make-child';
+            }
+
+            // Проверяем descendant маркер (будет перенаправлен на «below ancestor»)
+            if (data[DESCENDANT_KEY]) {
+                return 'below-ancestor';
+            }
+
+            // Проверяем closest-edge
+            const edge = extractClosestEdge(data);
+            if (edge === 'top') {
+                return 'above';
+            }
+            if (edge === 'bottom') {
+                return 'below';
+            }
+
+            return null;
+        };
 
         return dropTargetForElements({
             element,
 
             getData: ({ input, element, source }) => {
-                const data: DropTargetData = { rowKey, rowIndex };
-                const sourceData = source.data as unknown as DragSourceData;
+                const baseData: Record<string | symbol, unknown> = {
+                    rowKey,
+                    rowIndex
+                };
+
+                if (!isDragSourceData(source.data)) {
+                    return baseData;
+                }
 
                 // Определяем, какой тип hit detection использовать
-                if (sourceData.level === level) {
+                if (source.data.level === level) {
                     // Тот же уровень → closest-edge (top/bottom)
-                    return attachClosestEdge(
-                        data as unknown as Record<string | symbol, unknown>,
-                        { input, element, allowedEdges: ['top', 'bottom'] }
-                    );
+                    return attachClosestEdge(baseData, {
+                        input,
+                        element,
+                        allowedEdges: ['top', 'bottom']
+                    });
                 }
 
-                if (sourceData.level - 1 === level) {
+                if (source.data.level - 1 === level) {
                     // Уровень потенциального родителя → make-child
-                    return { ...data, [MAKE_CHILD_KEY]: true };
+                    return { ...baseData, [MAKE_CHILD_KEY]: true };
                 }
 
-                if (level > sourceData.level) {
+                if (level > source.data.level) {
                     // Вложенный потомок элемента того же уровня → будет
                     // перенаправлен в computeDropResult на «below ancestor»
-                    return { ...data, [DESCENDANT_KEY]: true };
+                    return { ...baseData, [DESCENDANT_KEY]: true };
                 }
 
                 // Другие уровни → нет валидных инструкций
-                return data as unknown as Record<string | symbol, unknown>;
+                return baseData;
             },
 
             onDragEnter: ({ source, self }) => {
@@ -97,11 +159,16 @@ export const useDropTargetRow = ({
                 indicatorStore.set(null);
 
                 const raw = extractRawInstruction(self.data);
-                if (!raw) return;
+                if (!raw) {
+                    return;
+                }
 
-                const sourceData = source.data as unknown as DragSourceData;
+                if (!isDragSourceData(source.data)) {
+                    return;
+                }
+
                 const result = computeDropResult(
-                    sourceData.rowKey,
+                    source.data.rowKey,
                     rowKey,
                     raw,
                     nodeMapRef.current
@@ -112,44 +179,6 @@ export const useDropTargetRow = ({
                 }
             }
         });
-
-        function updateIndicator(
-            source: { data: Record<string, unknown> },
-            selfData: Record<string | symbol, unknown>
-        ) {
-            const raw = extractRawInstruction(selfData);
-            if (!raw) {
-                indicatorStore.set(null);
-                return;
-            }
-
-            const sourceData = source.data as unknown as DragSourceData;
-            const result = computeDropResult(
-                sourceData.rowKey,
-                rowKey,
-                raw,
-                nodeMapRef.current
-            );
-
-            indicatorStore.set(result.indicator);
-        }
-
-        function extractRawInstruction(
-            data: Record<string | symbol, unknown>
-        ): RawInstruction | null {
-            // Проверяем make-child маркер
-            if (data[MAKE_CHILD_KEY]) return 'make-child';
-
-            // Проверяем descendant маркер (будет перенаправлен на «below ancestor»)
-            if (data[DESCENDANT_KEY]) return 'below-ancestor';
-
-            // Проверяем closest-edge
-            const edge = extractClosestEdge(data);
-            if (edge === 'top') return 'above';
-            if (edge === 'bottom') return 'below';
-
-            return null;
-        }
     }, [rowKey, rowIndex, level, enabled, indicatorStore]);
 
     return { rowRef };
