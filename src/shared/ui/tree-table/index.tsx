@@ -149,6 +149,7 @@ export const TreeTable = <T extends object>({
                     return (
                         <DraggableRow
                             {...props}
+                            index={meta?.indexAmongSiblings ?? 0}
                             draggable={draggable}
                             level={meta?.level ?? 0}
                             parentKey={meta?.parentKey ?? null}
